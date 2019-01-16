@@ -14,7 +14,7 @@ import javax.transaction.Transactional;
 public interface TranslateWordRepository extends CrudRepository<TranslateWord, Long> {
 
     @Modifying
-    @Query(value = "UPDATE translate_word l set l.view_count = l.view_count + 1 WHERE l.hash_code = :hashCode ", nativeQuery = true)
+    @Query(value = "UPDATE translate_word set view_count = view_count + 1 WHERE hash_code = :hashCode ", nativeQuery = true)
     @Transactional
     void incrementViewCountByOne(@Param("hashCode") int hashCode);
 
