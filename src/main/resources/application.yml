@@ -1,0 +1,23 @@
+spring:
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults : false
+        dialect : org.hibernate.dialect.PostgreSQLDialect
+        ddl-auto: update
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/translate
+    username: postgres
+    password: postgres
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
