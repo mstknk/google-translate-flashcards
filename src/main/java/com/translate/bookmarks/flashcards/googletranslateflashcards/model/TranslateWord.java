@@ -1,6 +1,5 @@
 package com.translate.bookmarks.flashcards.googletranslateflashcards.model;
 
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import javax.persistence.Entity;
