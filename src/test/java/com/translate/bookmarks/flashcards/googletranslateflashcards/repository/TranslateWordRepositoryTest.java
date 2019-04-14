@@ -1,20 +1,18 @@
 package com.translate.bookmarks.flashcards.googletranslateflashcards.repository;
 
 import com.translate.bookmarks.flashcards.googletranslateflashcards.model.TranslateWord;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit4.SpringRunner;
-
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import java.util.List;
 import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @DataJpaTest
 public class TranslateWordRepositoryTest {
 
@@ -45,6 +43,24 @@ public class TranslateWordRepositoryTest {
                 () -> assertEquals(mockTranslateWord.getToText(), saved.getToText()),
                 () -> assertEquals(mockTranslateWord.getHashCode(), saved.getHashCode()),
                 () -> assertEquals(mockTranslateWord.getFromText(), saved.getFromText())
+        );
+
+    }
+
+    @Test
+    public void findAllFromLanguage() {
+        translateWordRepository.save(mockTranslateWord);
+        translateWordRepository.save(new TranslateWord("English", "Turkish", "premature", "erken"));
+        translateWordRepository.save(new TranslateWord("English", "Turkish", "clarity", "berraklık"));
+
+        List<TranslateWord> results = translateWordRepository.findAllTrnslateWordByFromLangaue("English");
+        List<TranslateWord> germanResults = translateWordRepository.findAllTrnslateWordByFromLangaue("German");
+        assertEquals(2, results.size());
+        assertEquals(1, germanResults.size());
+        assertAll(
+                () -> assertEquals(results.get(0).getFromLang(), "English"),
+                () -> assertEquals(results.get(0).getToText(), "erken"),
+                () -> assertEquals(results.get(0).getFromText(), "premature")
         );
 
     }

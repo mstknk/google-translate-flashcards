@@ -5,13 +5,15 @@ spring:
       hibernate:
         temp:
           use_jdbc_metadata_defaults : false
-        dialect : org.hibernate.dialect.PostgreSQLDialect
+       # dialect : org.hibernate.dialect.PostgreSQLDialect
+        dialect : org.hibernate.dialect.H2Dialect
         ddl-auto: update
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/translate
-    username: postgres
-    password: postgres
+    #url: jdbc:postgresql://192.168.0.232:5432/translate
+    url: jdbc:h2:mem:myDb;DB_CLOSE_DELAY=-1
+    #username: postgres
+    #password: postgres
 
 management:
   endpoints:

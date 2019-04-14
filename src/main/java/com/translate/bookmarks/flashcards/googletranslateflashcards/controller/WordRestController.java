@@ -19,7 +19,7 @@ public class WordRestController {
     @ResponseStatus(value = HttpStatus.OK)
     public ResponseEntity<List<TranslateWord>> getAllWords() {
 
-        return new ResponseEntity<List<TranslateWord>>(translateWordService.getAllWords(), HttpStatus.OK);
+        return new ResponseEntity<>(translateWordService.getAllWords(), HttpStatus.OK);
 
     }
 
@@ -27,13 +27,20 @@ public class WordRestController {
     @ResponseStatus(value = HttpStatus.OK)
     public ResponseEntity<TranslateWord> getWordByHashcode(@PathVariable String hashcode) {
 
-        return new ResponseEntity<TranslateWord>(translateWordService.findTrnslateWordByhashCode(Integer.parseInt(hashcode)), HttpStatus.OK);
+        return new ResponseEntity<>(translateWordService.findTrnslateWordByhashCode(Integer.parseInt(hashcode)), HttpStatus.OK);
+
+    }
+
+    @GetMapping("allwordsby/{fromLang}")
+    @ResponseStatus(value = HttpStatus.OK)
+    public ResponseEntity<List<TranslateWord>> getAllWordByFromLang(@PathVariable String fromLang) {
+        return new ResponseEntity<>(translateWordService.getAllWordsByFromLang(fromLang), HttpStatus.OK);
 
     }
 
     @PostMapping("/translateword/{hashcode}")
     @ResponseStatus(value = HttpStatus.OK)
-    public void increaceview(@PathVariable String hashcode) {
-        translateWordService.increaceView(Integer.parseInt(hashcode));
+    public ResponseEntity<TranslateWord> increaceview(@PathVariable String hashcode) {
+        return new ResponseEntity<>(translateWordService.increaceView(Integer.parseInt(hashcode)), HttpStatus.OK);
     }
 }

@@ -1,34 +1,83 @@
 package com.translate.bookmarks.flashcards.googletranslateflashcards.service;
 
+import com.translate.bookmarks.flashcards.googletranslateflashcards.apiresponse.UploadFileResponse;
+import com.translate.bookmarks.flashcards.googletranslateflashcards.exception.UnsupportedFileTypeException;
 import com.translate.bookmarks.flashcards.googletranslateflashcards.model.TranslateWord;
+import com.translate.bookmarks.flashcards.googletranslateflashcards.repository.TranslateWordRepository;
 import org.apache.commons.io.IOUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.apache.tika.Tika;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.StringUtils;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@RunWith(SpringRunner.class)
-@WebMvcTest(CsvParserService.class)
+@SpringBootTest
+@ExtendWith(SpringExtension.class)
+@DisplayName("csv file service tests")
 public class CsvParserServiceTest {
 
     @Autowired
     CsvParserService csvParserService;
 
-    @Test
-    public void csvParserTest() throws IOException {
+    @Autowired
+    FileUploadService fileUploadService;
+
+    @Autowired
+    TranslateWordRepository translateWordRepository;
+
+    private static MultipartFile multipartFile;
+
+    @BeforeAll
+    static void setUp() throws IOException {
         File file = new ClassPathResource(
                 "csv-test.csv").getFile();
+        multipartFile = getMultipartFile(file);
 
-        List<TranslateWord> translateWords = csvParserService.getWordsByParsingFromCsvFile(file);
+    }
+
+    @Test
+    public void fileUploadTest() throws IOException {
+
+        UploadFileResponse fileResponse = fileUploadService.uploadCsvFile(multipartFile);
+        assertAll(
+                () -> assertNotNull(fileResponse),
+                () -> assertEquals(700, fileResponse.getSize()),
+                () -> assertEquals("csv-test.csv", fileResponse.getFileName())
+        );
+    }
+
+    @Test
+    public void shouldThrowUnsupportedFileTypeException() throws IOException {
+
+        File file = new ClassPathResource(
+                "application.yml").getFile();
+        MultipartFile multipartNotSupportFile = getMultipartFile(file);
+        assertThrows(UnsupportedFileTypeException.class,
+                () -> fileUploadService.uploadCsvFile(multipartNotSupportFile)
+        );
+    }
+
+    @Test
+    public void csvParserTest() throws IOException {
+
+        UploadFileResponse fileResponse = fileUploadService.uploadCsvFile(multipartFile);
+        csvParserService.insertCsvFileToDB(fileResponse.getFile());
+        List<TranslateWord> translateWords = new ArrayList<>();
+        translateWordRepository.findAll().iterator().forEachRemaining(translateWords::add);
         TranslateWord epectedWord = translateWords.get(0);
         assertAll(
                 () -> assertNotNull(translateWords),
@@ -37,7 +86,7 @@ public class CsvParserServiceTest {
 
         assertAll(
                 () -> assertNotNull(epectedWord),
-                () -> assertNull(epectedWord.getId()),
+                () -> assertEquals(1, epectedWord.getId().intValue()),
                 () -> assertEquals("English", epectedWord.getFromLang()),
                 () -> assertEquals("Turkish", epectedWord.getToLang()),
                 () -> assertEquals("impedes", epectedWord.getFromText()),
@@ -46,31 +95,17 @@ public class CsvParserServiceTest {
         System.out.println(translateWords);
     }
 
-    @Test
-    public void csvParserTestByString() throws IOException {
-        File file = new ClassPathResource(
-                "csv-test.csv").getFile();
-        InputStream targetStream = new FileInputStream(file);
 
-        StringWriter writer = new StringWriter();
-        IOUtils.copy(targetStream, writer);
-        String fileString = writer.toString();
-
-        List<TranslateWord> translateWords = csvParserService.getWordsByParsingFromCsvFile(fileString);
-        TranslateWord epectedWord = translateWords.get(0);
-        assertAll(
-                () -> assertNotNull(translateWords),
-                () -> assertEquals(22, translateWords.size())
-        );
-
-        assertAll(
-                () -> assertNotNull(epectedWord),
-                () -> assertNull(epectedWord.getId()),
-                () -> assertEquals("English", epectedWord.getFromLang()),
-                () -> assertEquals("Turkish", epectedWord.getToLang()),
-                () -> assertEquals("impedes", epectedWord.getFromText()),
-                () -> assertEquals("Engeller", epectedWord.getToText())
-        );
-        System.out.println(translateWords);
+    private static MultipartFile getMultipartFile(File file) {
+        MultipartFile multipartFile = null;
+        try {
+            FileInputStream input = new FileInputStream(file);
+            multipartFile = new MockMultipartFile("file",
+                    file.getName(), new Tika().detect(file), IOUtils.toByteArray(input));
+            input.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return multipartFile;
     }
 }
